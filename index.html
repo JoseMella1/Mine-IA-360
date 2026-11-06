@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MineAI 360 | Recomendador de perforadoras</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d2e;--panel2:#18263a;--line:#2b3b52;--text:#eef4fb;--muted:#9eafc4;--accent:#e6a23c;--green:#55d6a1}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(135deg,#09101b,#101d2d 60%,#142437);color:var(--text)}
+header{padding:25px 5%;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:15px}
+.logo{font-weight:900;font-size:25px;letter-spacing:.5px}.logo span{color:var(--accent)}.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:30px;padding:8px 12px}
+main{max-width:1150px;margin:30px auto;padding:0 20px}.intro{margin-bottom:24px}.intro h1{font-size:clamp(26px,4vw,42px);margin:0 0 10px}.intro p{color:var(--muted);max-width:750px;line-height:1.6}
+.warning{border:1px solid #7d5a22;background:#2b2113;color:#f6d8a4;padding:12px 15px;border-radius:10px;font-size:13px;margin:18px 0 25px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{background:rgba(18,29,46,.94);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 12px 35px #0002}.card h2{font-size:19px;margin:0 0 18px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}input,select{width:100%;background:#0c1625;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font-size:14px}
+button{background:var(--accent);border:0;border-radius:9px;padding:13px 18px;color:#201506;font-weight:800;cursor:pointer;margin-top:17px;width:100%;font-size:15px}button:hover{filter:brightness(1.08)}
+.result{display:none;margin-top:20px}.winner{border:1px solid #287d60;background:#102c26;border-radius:12px;padding:16px;margin-bottom:14px}.winner h3{color:var(--green);margin:0 0 8px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{color:var(--accent);font-weight:700}tr:first-child td{background:#132c28}
+small,.muted{color:var(--muted)}.catalog{margin-top:20px}.footer{color:var(--muted);font-size:12px;text-align:center;padding:28px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr 1fr}header{align-items:flex-start;flex-direction:column}}
+</style></head>
+<body>
+<header><div class="logo">⛏️ MineAI <span>360</span></div><div class="tag">PROTOTIPO ACADÉMICO · v0.1</div></header>
+<main>
+<section class="intro"><h1>Encuentra la perforadora más compatible.</h1><p>Ingresa las necesidades de tu operación y compara equipos de demostración según criterios de diámetro, profundidad, velocidad, presión de referencia, presupuesto y tipo de roca.</p></section>
+<div class="warning">⚠️ Demostración académica: catálogo, valores y puntuaciones ficticios. No usar para decisiones operacionales reales. Los parámetros deben verificarse con fabricantes y especialistas.</div>
+<div class="grid">
+<section class="card"><h2>01 / Requisitos de la operación</h2>
+<div class="formgrid">
+<div><label>Tipo de roca</label><select id="rock"><option>Media</option><option>Dura</option><option>Blanda</option></select></div>
+<div><label>Tipo de perforadora preferido</label><select id="kind"><option>Cualquiera</option><option>Rotaria</option><option>DTH</option></select></div>
+<div><label>Diámetro requerido (mm)</label><input id="diam" type="number" value="200" min="50" max="500"></div>
+<div><label>Profundidad (m)</label><input id="depth" type="number" value="15" min="1" max="100"></div>
+<div><label>Velocidad deseada (m/h)</label><input id="speed" type="number" value="25" min="1" max="200"></div>
+<div><label>Presión de referencia (bar)</label><input id="pressure" type="number" value="25" min="1" max="100"></div>
+<div><label>Presupuesto máximo (USD)</label><input id="budget" type="number" value="3000000" min="100000"></div>
+<div><label>Horas operación/día</label><input id="hours" type="number" value="20" min="1" max="24"></div>
+<div style="grid-column:1/-1"><label>Prioridad</label><select id="priority"><option>Equilibrio general</option><option>Menor inversión</option><option>Mayor velocidad</option><option>Menor mantenimiento</option></select></div>
+</div><button onclick="recommend()">Analizar y recomendar</button></section>
+<section class="card"><h2>02 / Recomendación</h2><div id="placeholder" class="muted">Completa los requisitos y presiona “Analizar y recomendar” para ver la comparación.</div><div id="result" class="result"></div></section>
+</div>
+<section class="card catalog"><h2>Catálogo demostrativo</h2><div id="catalog"></div><small>Los equipos de esta lista son inventados y solo sirven para mostrar el funcionamiento del prototipo.</small></section>
+</main><div class="footer">MineAI 360 · Concepto de apoyo a decisiones de selección de equipos de perforación</div>
+<script>
+const machines=[
+{name:"Perforadora A (ficticia)",kind:"Rotaria",min:150,max:250,depth:18,speed:20,pressure:20,cost:1800000,maint:75,rock:"Media"},
+{name:"Perforadora B (ficticia)",kind:"Rotaria",min:200,max:300,depth:22,speed:28,pressure:25,cost:2600000,maint:90,rock:"Dura"},
+{name:"Perforadora C (ficticia)",kind:"DTH",min:100,max:220,depth:30,speed:24,pressure:30,cost:2200000,maint:105,rock:"Dura"},
+{name:"Perforadora D (ficticia)",kind:"Rotaria",min:250,max:350,depth:25,speed:18,pressure:18,cost:3200000,maint:70,rock:"Media"}];
+function money(n){return new Intl.NumberFormat("es-CL",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n)}
+function rank(m){
+let d=+diam.value,z=+depth.value,v=+speed.value,p=+pressure.value,b=+budget.value,r=rock.value,k=kind.value,pri=priority.value;
+let s=0,why=[],alerts=[];
+if(m.min<=d&&d<=m.max){s+=25;why.push("diámetro en rango");}else alerts.push("diámetro fuera de rango");
+if(z<=m.depth){s+=15;why.push("profundidad dentro del límite");}else alerts.push("profundidad supera límite");
+s+=Math.min(20,20*m.speed/Math.max(v,1));if(m.speed>=v)why.push("velocidad nominal alcanza el objetivo");else alerts.push("velocidad nominal inferior al objetivo");
+s+=Math.max(0,10-Math.abs(m.pressure-p)*.5);
+if(m.cost<=b){s+=15;why.push("costo dentro del presupuesto");}else alerts.push("supera presupuesto");
+if(r===m.rock){s+=10;why.push("clasificación de roca coincidente");}else if(r==="Media"&&m.rock==="Dura"||r==="Blanda"&&m.rock==="Media")s+=5;
+if(k==="Cualquiera"||k===m.kind)s+=5;else alerts.push("tipo diferente al preferido");
+if(pri==="Menor inversión")s+=Math.max(0,10-m.cost/b*10);
+else if(pri==="Mayor velocidad")s+=Math.min(10,m.speed/Math.max(v,1)*10);
+else if(pri==="Menor mantenimiento")s+=Math.max(0,10-m.maint/15);
+else s+=5;
+return {...m,score:Math.min(100,Math.round(s*10)/10),why,alerts};
+}
+function recommend(){
+const ranked=machines.map(rank).sort((a,b)=>b.score-a.score);
+placeholder.style.display="none";result.style.display="block";
+const w=ranked[0];
+result.innerHTML=`<div class="winner"><h3>Equipo mejor puntuado: ${w.name}</h3><strong>${w.score}% compatibilidad simulada</strong><p>Motivos: ${w.why.join(", ")||"puntuación general"}.</p><p>Alertas: ${w.alerts.join(", ")||"ninguna alerta de catálogo"}.</p></div><table><thead><tr><th>Equipo</th><th>Puntuación</th><th>Precio ficticio</th><th>Velocidad (m/h)</th><th>Alertas</th></tr></thead><tbody>${ranked.map((m,i)=>`<tr><td>${i+1}. ${m.name}</td><td>${m.score}%</td><td>${money(m.cost)}</td><td>${m.speed}</td><td>${m.alerts.join("; ")||"—"}</td></tr>`).join("")}</tbody></table><p class="muted">La puntuación es una regla demostrativa, no una probabilidad ni recomendación técnica real.</p>`;
+}
+catalog.innerHTML=`<table><thead><tr><th>Equipo</th><th>Tipo</th><th>Diámetro (mm)</th><th>Profundidad máx.</th><th>Velocidad nominal</th><th>Precio ficticio</th></tr></thead><tbody>${machines.map(m=>`<tr><td>${m.name}</td><td>${m.kind}</td><td>${m.min}–${m.max}</td><td>${m.depth} m</td><td>${m.speed} m/h</td><td>${money(m.cost)}</td></tr>`).join("")}</tbody></table>`;
+</script></body></html>
